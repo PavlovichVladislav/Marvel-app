@@ -48,8 +48,6 @@ class CharInfo extends Component {
             console.log('update');
             this.updateChar();
         }
-
-        this.foo.bar = 0;
     }
 
     componentDidCatch(err, info) {
