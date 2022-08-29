@@ -32,8 +32,25 @@ class CharList extends Component {
 
     render() {
         const {chars, loading, error} = this.state;
+        const {selectChar, id} = this.props;
         
-        const charList = chars ? chars.map(char => <CharItem key={char.id} name={char.name} thumb={char.thumb}/>) : null;
+        let charList = [];
+
+        if (chars) {
+            charList = chars.map(char => {
+                const className = char.id === id ? 'char__item char__item_selected' : 'char__item';
+                return (
+                    <CharItem 
+                        selectChar={() => selectChar(char.id)}
+                        key={char.id} 
+                        name={char.name} 
+                        thumb={char.thumb}
+                        className={className}
+                    />
+                )
+            })
+        }
+        
 
         const spinner = loading ? <Spinner/> : null;
         const errorMessage = error ? <Error/> : null;
@@ -48,10 +65,10 @@ class CharList extends Component {
     }
 }
 
-const CharItem = ({name, thumb}) => {
+const CharItem = ({name, thumb, selectChar, className}) => {
     const imgClass = thumb.includes('image_not_available') ? 'char__noImg' : 'char__Img';
     return (
-        <li tabIndex='0' className="char__item">
+        <li tabIndex='0' className={className} onClick={selectChar}>
             <img className={imgClass} src={thumb} alt={name}/>
             <div className="char__name">{name}</div>
         </li>
