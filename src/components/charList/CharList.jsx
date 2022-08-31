@@ -1,59 +1,51 @@
 import './charList.scss';
-import { Component } from 'react';
+import { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import MarvelService from '../../services/MarvelService';
 import Spinner from '../common/spinner/Spinner';
 import Error from '../common/error/Error';
 
-class CharList extends Component {
-    state = {
-        chars: [],
-        loading: true,
-        error: false,
-        newItemsLoading: false,
-        offset: 210,
-        charEnded: false
-    }
+const CharList = ({selectChar, id}) => {
+    const [chars, setChars] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
+    const [newItemsLoading, setNewItemsLoading] = useState(false);
+    const [offset, setOffset] = useState(210);
+    const [charEnded, setCharEnded] = useState(false);
 
-    marvelService = new MarvelService();
+    const marvelService = new MarvelService();
 
-    componentDidMount() {
-        this.getChars();
-    }
-    
-    onCharsLoading = () => {
-        this.setState({newItemsLoading: true});
+    const onCharsLoading = () => {
+        setNewItemsLoading(true);
     }
  
-    onCharsLoaded = (newChars) => {
-        this.setState(state => ({
-            chars: [...state.chars, ...newChars],
-            loading: false,
-            newItemsLoading: false,
-            offset: state.offset + 9,
-            charEnded: newChars.length < 9 ? true: false
-        }));
-        
+    const onCharsLoaded = (newChars) => {
+        setChars(chars => [...chars, ...newChars]);
+        setLoading(false);
+        setNewItemsLoading(false);
+        setOffset(offset => offset + 9);
+        setCharEnded(newChars.length < 9 ? true: false);
     }
 
-    onError = () => {
-        this.setState({error: true, loading: false});
+    const onError = () => {
+        setError(true);
+        setLoading(false);
     }
 
-    getChars = (offset) => {
-        this.onCharsLoading();
-        this.marvelService.getAllCharacters(offset)
-            .then(chars => this.onCharsLoaded(chars))
-            .catch(this.onError);
+    const getChars = (offset) => {
+        onCharsLoading();
+        marvelService.getAllCharacters(offset)
+            .then(chars => onCharsLoaded(chars))
+            .catch(onError);
     }
 
-    render() {
-        const {chars, loading, error, newItemsLoading, offset, charEnded} = this.state;
-        const {selectChar, id} = this.props;
-        
-        let charList = [];
+    useEffect(() => {
+        getChars();
+    },[])
 
+    const renderCharList = (chars) => {
         if (chars.length !== 0) {
-            charList = chars.map(char => {
+            return chars.map(char => {
                 const className = char.id === id ? 'char__item char__item_selected' : 'char__item';
                 return (
                     <CharItem 
@@ -66,41 +58,32 @@ class CharList extends Component {
                 )
             })
         }
-        
 
-        const spinner = loading ? <Spinner/> : null;
-        const errorMessage = error ? <Error/> : null;
-        const content = !loading && !error ? 
-                            <View 
-                                chars={charList} 
-                                getChars={() => this.getChars(offset)} 
-                                loading={newItemsLoading}
-                                charEnded={charEnded}
-                            /> : null;
-                             
-        return (
-            <>
-                {content || spinner || errorMessage}
-            </>
-        )
+        return null;
     }
-}
 
-const CharItem = ({name, thumb, selectChar, className}) => {
-    const imgClass = thumb.includes('image_not_available') ? 'char__noImg' : 'char__Img';
+    const spinner = loading ? <Spinner/> : null;
+    const errorMessage = error ? <Error/> : null;
+    const content = !loading && !error ? 
+                        <View 
+                            renderCharList={() => renderCharList(chars)} 
+                            getChars={() => getChars(offset)} 
+                            loading={newItemsLoading}
+                            charEnded={charEnded}
+                        /> : null;
+                            
     return (
-        <li tabIndex='0' className={className} onClick={selectChar}>
-            <img className={imgClass} src={thumb} alt={name}/>
-            <div className="char__name">{name}</div>
-        </li>
+        <>
+            {content || spinner || errorMessage}
+        </>
     )
 }
 
-const View = ({chars, getChars, loading, charEnded}) => {
+const View = ({renderCharList, getChars, loading, charEnded}) => {
     return (
         <div className="char__list">
                 <ul className="char__grid">
-                    {chars}
+                    {renderCharList()}
                 </ul>
                 {!charEnded ? 
                     <button 
@@ -114,6 +97,27 @@ const View = ({chars, getChars, loading, charEnded}) => {
                 }
             </div>
     )
+}
+
+const CharItem = ({name, thumb, selectChar, className}) => {
+    const imgClass = thumb.includes('image_not_available') ? 'char__noImg' : 'char__Img';
+    return (
+        <li 
+            tabIndex='0' 
+            className={className} 
+            onClick={selectChar} 
+            onKeyUp={(e) => {
+                if (e.code === 'Enter') selectChar();
+            }}
+        >
+            <img className={imgClass} src={thumb} alt={name}/>
+            <div className="char__name">{name}</div>
+        </li>
+    )
+}
+
+CharList.propTypes = {
+    selectChar: PropTypes.func.isRequired
 }
 
 export default CharList;
