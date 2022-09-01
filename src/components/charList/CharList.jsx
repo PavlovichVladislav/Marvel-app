@@ -1,46 +1,33 @@
 import './charList.scss';
 import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import MarvelService from '../../services/MarvelService';
+import useMarvelService from '../../services/MarvelService';
 import Spinner from '../common/spinner/Spinner';
 import Error from '../common/error/Error';
 
 const CharList = ({selectChar, id}) => {
     const [chars, setChars] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(false);
     const [newItemsLoading, setNewItemsLoading] = useState(false);
     const [offset, setOffset] = useState(210);
     const [charEnded, setCharEnded] = useState(false);
 
-    const marvelService = new MarvelService();
-
-    const onCharsLoading = () => {
-        setNewItemsLoading(true);
-    }
+    const {error, loading, getAllCharacters} = useMarvelService();
  
     const onCharsLoaded = (newChars) => {
         setChars(chars => [...chars, ...newChars]);
-        setLoading(false);
         setNewItemsLoading(false);
         setOffset(offset => offset + 9);
         setCharEnded(newChars.length < 9 ? true: false);
     }
 
-    const onError = () => {
-        setError(true);
-        setLoading(false);
-    }
-
-    const getChars = (offset) => {
-        onCharsLoading();
-        marvelService.getAllCharacters(offset)
+    const getChars = (offset, initial) => {
+        initial ? setNewItemsLoading(false) : setNewItemsLoading(true);
+        getAllCharacters(offset)
             .then(chars => onCharsLoaded(chars))
-            .catch(onError);
     }
 
     useEffect(() => {
-        getChars();
+        getChars(offset, true);
     },[])
 
     const renderCharList = (chars) => {
@@ -62,28 +49,34 @@ const CharList = ({selectChar, id}) => {
         return null;
     }
 
-    const spinner = loading ? <Spinner/> : null;
+    const items = renderCharList(chars);
+
+    const spinner = loading && !newItemsLoading ? <Spinner/> : null;
     const errorMessage = error ? <Error/> : null;
-    const content = !loading && !error ? 
-                        <View 
-                            renderCharList={() => renderCharList(chars)} 
-                            getChars={() => getChars(offset)} 
-                            loading={newItemsLoading}
-                            charEnded={charEnded}
-                        /> : null;
+    const content = !error 
+    ?  <View 
+            charList={items} 
+            getChars={() => getChars(offset)} 
+            loading={newItemsLoading}
+            charEnded={charEnded}
+        /> 
+    : null;
                             
     return (
-        <>
-            {content || spinner || errorMessage}
+        <>  
+            {spinner}
+            {content}
+            {errorMessage}
         </>
     )
 }
 
-const View = ({renderCharList, getChars, loading, charEnded}) => {
+const View = ({charList, getChars, loading, charEnded}) => {
+    if (!charList) return null;
     return (
         <div className="char__list">
                 <ul className="char__grid">
-                    {renderCharList()}
+                    {charList}
                 </ul>
                 {!charEnded ? 
                     <button 
