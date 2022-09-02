@@ -1,10 +1,12 @@
-import './comicsList.scss';
-import uw from '../../resources/img/UW.png';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+
 import useMarvelService from '../../services/MarvelService';
+
 import Error from '../common/error/Error';
 import Spinner from '../common/spinner/Spinner';
 
+import './comicsList.scss';
 const ComicsList = () => {
     const [comics, setComics] = useState([]);
     const {loading, error, getComicsList} = useMarvelService();
@@ -33,16 +35,16 @@ const ComicsList = () => {
 
             return (
                 <li className="comics__item" key={i}>
-                    <a href="#">
+                    <Link to={`${comic.id}`}>
                         <img src={comic.thumb} alt="ultimate war" className={className}/>
                         <div className="comics__item-name">{comic.name}</div>
                         <div className="comics__item-price">{comic.price}$</div>
-                    </a>
+                    </Link>
                 </li>
             )
         })
     }
-
+    
     const errorMessage = error ? <Error/> : null;
     const spinner = loading && !newItemsLoading ? Array(8).fill(<Spinner/>) : null;
     const content = !error ? renderComicsList(comics) : null;
