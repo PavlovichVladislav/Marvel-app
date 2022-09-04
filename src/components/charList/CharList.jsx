@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import useMarvelService from '../../services/MarvelService';
 import Spinner from '../common/spinner/Spinner';
 import Error from '../common/error/Error';
+import { CSSTransition, TransitionGroup } from 'react-transition-group';
 
 const CharList = ({selectChar, id}) => {
     const [chars, setChars] = useState([]);
@@ -31,64 +32,72 @@ const CharList = ({selectChar, id}) => {
     },[])
 
     const renderCharList = (chars) => {
-        if (chars.length !== 0) {
-            return chars.map(char => {
+        return (
+            chars.map(char => {
                 const className = char.id === id ? 'char__item char__item_selected' : 'char__item';
                 return (
-                    <CharItem 
-                        selectChar={() => selectChar(char.id)}
-                        key={char.id} 
-                        name={char.name} 
-                        thumb={char.thumb}
-                        className={className}
-                    />
+                    <CSSTransition
+                        key={char.id}
+                        timeout={1000}
+                        classNames="char__item"
+                        unmountOnExit
+                        mountOnEnter
+                    >
+                        <CharItem 
+                            selectChar={() => selectChar(char.id)}
+                            key={char.id} 
+                            name={char.name} 
+                            thumb={char.thumb}
+                            className={className}
+                        />
+                    </CSSTransition>
                 )
             })
-        }
-
-        return null;
+        )
     }
 
     const items = renderCharList(chars);
 
     const spinner = loading && !newItemsLoading ? <Spinner/> : null;
     const errorMessage = error ? <Error/> : null;
-    const content = !error 
-    ?  <View 
+    const content = !error && (<View 
             charList={items} 
             getChars={() => getChars(offset)} 
             loading={newItemsLoading}
             charEnded={charEnded}
-        /> 
-    : null;
-                            
+        /> )
+
     return (
         <>  
-            {spinner}
-            {content}
-            {errorMessage}
+            <div className="char__list">
+                {spinner}
+                {errorMessage}
+                {content}
+            </div>
         </>
     )
 }
 
 const View = ({charList, getChars, loading, charEnded}) => {
-    if (!charList) return null;
     return (
-        <div className="char__list">
-                <ul className="char__grid">
+        <>
+            <ul className="char__grid">
+                <TransitionGroup component={null}>
                     {charList}
-                </ul>
-                {!charEnded ? 
-                    <button 
-                    className="button button__main button__long" 
-                    onClick={getChars} 
-                    disabled={loading}
-                    >
-                        <div className="inner">load more</div>
-                    </button>
-                    : null
-                }
-            </div>
+                </TransitionGroup>
+            </ul>
+
+            {!charEnded ? 
+                <button 
+                className="button button__main button__long" 
+                onClick={getChars} 
+                disabled={loading}
+                >
+                    <div className="inner">load more</div>
+                </button>
+                : null
+            }
+        </>
     )
 }
 
