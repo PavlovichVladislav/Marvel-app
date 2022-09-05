@@ -1,4 +1,4 @@
-import Error from "../common/error/Error";
+import Error from "../../common/error/Error";
 import { Link } from "react-router-dom";
 
 import './404.scss';

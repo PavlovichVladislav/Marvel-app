@@ -5,6 +5,7 @@ import useMarvelService from '../../services/MarvelService';
 import Skeleton from '../skeleton/Skeleton';
 import Spinner from '../common/spinner/Spinner';
 import Error from '../common/error/Error';
+import CharForm from '../charForm/CharForm';
 
 const CharInfo = ({id}) => {
     const [char, setChar] = useState(null);
@@ -32,8 +33,11 @@ const CharInfo = ({id}) => {
     const content = !loading && !error && char ? <View {...char} /> : null;
 
     return (
-        <div className="char__info">
-            {content || spinner || errorMessage || <Skeleton/>}
+        <div className='char__rightColumn'>
+            <div className="char__info">
+                {content || spinner || errorMessage || <Skeleton/>}
+            </div>
+            <CharForm/>
         </div>
     )
 }
